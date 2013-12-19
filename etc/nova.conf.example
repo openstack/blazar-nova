@@ -2,3 +2,7 @@
 scheduler_available_filters = nova.scheduler.filters.all_filters
 scheduler_available_filters = climatenova.scheduler.filters.climate_filter.ClimateFilter
 scheduler_default_filters=RetryFilter,AvailabilityZoneFilter,RamFilter,ComputeFilter,ComputeCapabilitiesFilter,ImagePropertiesFilter,ClimateFilter
+
+osapi_compute_extension = nova.api.openstack.compute.contrib.standard_extensions
+osapi_compute_extension = climatenova.api.extensions.default_reservation.Default_reservation
+osapi_compute_extension = climatenova.api.extensions.reservation.Reservation

@@ -10,6 +10,6 @@ sphinxcontrib-httpdomain
 discover
 fixtures>=0.3.14
 testrepository>=0.0.17
-testtools>=0.9.32
+testtools>=0.9.34
 
 http://tarballs.openstack.org/nova/nova-master.tar.gz#egg=nova

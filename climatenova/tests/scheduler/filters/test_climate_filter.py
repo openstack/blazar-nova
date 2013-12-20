@@ -14,14 +14,20 @@
 
 from nova.tests.scheduler import fakes
 
-from climatenova.filters import host_reservation
-from climatenova import tests
+from climatenova.scheduler.filters import climate_filter
+from nova import context
+from nova import test
 
 
-class ClimateSchedulerTestCase(tests.TestCase):
+class ClimateFilterTestCase(test.TestCase):
 
-    def test_climate_scheduler(self):
-        f = host_reservation.ClimateFilter()
+    def setUp(self):
+        super(ClimateFilterTestCase, self).setUp()
+
+    def test_climate_filter(self):
+        f = climate_filter.ClimateFilter()
         host = fakes.FakeHostState('host1', 'node1', {})
-        filter_properties = {"scheduler_hints": {"foo": "bar"}}
+        fake_context = context.RequestContext('fake', 'fake')
+        filter_properties = {"scheduler_hints": {"foo": "bar"},
+                             "context": fake_context}
         self.assertTrue(f.host_passes(host, filter_properties))

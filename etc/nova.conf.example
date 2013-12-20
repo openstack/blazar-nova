@@ -1,0 +1,4 @@
+[DEFAULT]
+scheduler_available_filters = nova.scheduler.filters.all_filters
+scheduler_available_filters = climatenova.scheduler.filters.climate_filter.ClimateFilter
+scheduler_default_filters=RetryFilter,AvailabilityZoneFilter,RamFilter,ComputeFilter,ComputeCapabilitiesFilter,ImagePropertiesFilter,ClimateFilter

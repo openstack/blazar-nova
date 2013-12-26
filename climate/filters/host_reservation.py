@@ -15,11 +15,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo.config import cfg
-#NOTE(scroiset): resolve conflict with nova
-cfg.CONF.unregister_opt(cfg.StrOpt('default_log_levels'))
-
-from climate.openstack.common import log as logging
+from nova.openstack.common import log as logging
 from nova.scheduler import filters
 
 LOG = logging.getLogger(__name__)

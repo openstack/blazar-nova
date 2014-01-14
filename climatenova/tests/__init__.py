@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from climate.openstack.common import test
+from climatenova.openstack.common import test
 
 
 class TestCase(test.BaseTestCase):

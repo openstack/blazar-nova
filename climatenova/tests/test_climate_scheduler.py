@@ -14,8 +14,8 @@
 
 from nova.tests.scheduler import fakes
 
-from climate.filters import host_reservation
-from climate import tests
+from climatenova.filters import host_reservation
+from climatenova import tests
 
 
 class ClimateSchedulerTestCase(tests.TestCase):

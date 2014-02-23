@@ -4,12 +4,12 @@ docutils==0.9.1
 nose
 mock>=1.0
 mox>=0.5.3
-sphinx>=1.1.2
+sphinx>=1.1.2,<1.2
 sphinxcontrib-httpdomain
 
 discover
 fixtures>=0.3.14
-testrepository>=0.0.17
+testrepository>=0.0.18
 testtools>=0.9.34
 
 http://tarballs.openstack.org/nova/nova-master.tar.gz#egg=nova

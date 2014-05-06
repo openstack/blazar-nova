@@ -84,14 +84,14 @@ class ClimateFilter(filters.BaseHostFilter):
             if agg['availability_zone'].startswith(
                     cfg.CONF['climate:physical:host'].climate_az_prefix):
                 pools.append(agg)
-            if agg['name'] == \
-                    cfg.CONF['climate:physical:host'].aggregate_freepool_name:
+            if agg['name'] == (
+                    cfg.CONF['climate:physical:host'].aggregate_freepool_name):
                 pools.append(agg)
 
         if pools:
             if not requested_pools:
                 # Host is in a Pool and none requested
-                LOG.audit("In a user pool or in the freepool")
+                LOG.audit(_("In a user pool or in the freepool"))
                 return False
 
             # Find aggregate which matches Pool
@@ -127,5 +127,4 @@ class ClimateFilter(filters.BaseHostFilter):
             if requested_pools:
                 # Host is not in a Pool and Pool requested
                 return False
-            else:
-                return True
+            return True

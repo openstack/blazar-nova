@@ -16,28 +16,28 @@
 import mock
 from nova.openstack.common import jsonutils
 
-from climatenova.tests.api import extensions
+from blazarnova.tests.api import extensions
 
 
-class ClimateDefaultReservationTestCase(extensions.BaseExtensionTestCase):
-    """Climate API extensions test case.
+class BlazarDefaultReservationTestCase(extensions.BaseExtensionTestCase):
+    """Blazar API extensions test case.
 
     This test case provides tests for Default_reservation extension working
     together with Reservation extension passing hints to Nova and
-    sending lease creation request to Climate.
+    sending lease creation request to Blazar.
     """
 
     def setUp(self):
         """Set up testing environment."""
-        super(ClimateDefaultReservationTestCase, self).setUp()
+        super(BlazarDefaultReservationTestCase, self).setUp()
 
-    @mock.patch('climatenova.api.extensions.reservation.climate_client')
+    @mock.patch('blazarnova.api.extensions.reservation.blazar_client')
     def test_create_with_default(self, mock_module):
         """Test extension work with default lease parameters."""
 
         mock_module.Client.return_value = self.mock_client
 
-        # here we set no Climate related hints, so all lease info should be
+        # here we set no Blazar related hints, so all lease info should be
         # default one - dates got from CONF and auto generated name
         body = {
             'server': {
@@ -63,12 +63,12 @@ class ClimateDefaultReservationTestCase(extensions.BaseExtensionTestCase):
 
         self.assertEqual(202, res.status_int)
 
-    @mock.patch('climatenova.api.extensions.reservation.climate_client')
+    @mock.patch('blazarnova.api.extensions.reservation.blazar_client')
     def test_create_with_passed_args(self, mock_module):
         """Test extension work if some lease param would be passed."""
         # here we pass non default lease name to Nova
         # Default_reservation extension should not rewrite it,
-        # Reservation extension should pass it to Climate
+        # Reservation extension should pass it to Blazar
 
         mock_module.Client.return_value = self.mock_client
 

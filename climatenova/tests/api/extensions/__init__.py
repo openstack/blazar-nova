@@ -30,13 +30,13 @@ UUID = fakes.FAKE_UUID
 CONF = cfg.CONF
 CONF.import_opt('osapi_compute_ext_list', 'nova.api.openstack.compute.contrib')
 CONF.import_opt('reservation_start_date',
-                'climatenova.api.extensions.default_reservation')
+                'blazarnova.api.extensions.default_reservation')
 CONF.import_opt('reservation_length_hours',
-                'climatenova.api.extensions.default_reservation')
+                'blazarnova.api.extensions.default_reservation')
 CONF.import_opt('reservation_length_days',
-                'climatenova.api.extensions.default_reservation')
+                'blazarnova.api.extensions.default_reservation')
 CONF.import_opt('reservation_length_minutes',
-                'climatenova.api.extensions.default_reservation')
+                'blazarnova.api.extensions.default_reservation')
 
 
 class InstanceWrapper(object):
@@ -61,9 +61,9 @@ class BaseExtensionTestCase(test.TestCase):
         self.flags(
             osapi_compute_extension=[
                 'nova.api.openstack.compute.contrib.select_extensions',
-                'climatenova.api.extensions.default_reservation.'
+                'blazarnova.api.extensions.default_reservation.'
                 'Default_reservation',
-                'climatenova.api.extensions.reservation.Reservation'
+                'blazarnova.api.extensions.reservation.Reservation'
             ],
             osapi_compute_ext_list=['Scheduler_hints'])
 

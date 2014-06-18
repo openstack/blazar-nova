@@ -16,28 +16,28 @@
 import mock
 from nova.openstack.common import jsonutils
 
-from climatenova.tests.api import extensions
+from blazarnova.tests.api import extensions
 
 
-class ClimateReservationTestCase(extensions.BaseExtensionTestCase):
-    """Climate API extensions test case.
+class BlazarReservationTestCase(extensions.BaseExtensionTestCase):
+    """Blazar API extensions test case.
 
     This test case provides tests for Default_reservation extension working
     together with Reservation extension passing hints to Nova and
-    sending lease creation request to Climate.
+    sending lease creation request to Blazar.
     """
 
     def setUp(self):
         """Set up testing environment."""
-        super(ClimateReservationTestCase, self).setUp()
+        super(BlazarReservationTestCase, self).setUp()
         self.flags(
             osapi_compute_extension=[
                 'nova.api.openstack.compute.contrib.select_extensions',
-                'climatenova.api.extensions.reservation.Reservation'
+                'blazarnova.api.extensions.reservation.Reservation'
             ],
             osapi_compute_ext_list=['Scheduler_hints'])
 
-    @mock.patch('climatenova.api.extensions.reservation.climate_client')
+    @mock.patch('blazarnova.api.extensions.reservation.blazar_client')
     def test_create(self, mock_module):
         """Test extension work with passed lease parameters."""
 

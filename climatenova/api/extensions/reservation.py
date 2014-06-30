@@ -15,8 +15,8 @@
 
 """
 Reservation extension parses instance creation request to find hints referring
-to use Climate. If finds, create instance, shelve it not to use compute
-capacity while instance is not used and sent lease creation request to Climate.
+to use Blazar. If finds, create instance, shelve it not to use compute
+capacity while instance is not used and sent lease creation request to Blazar.
 """
 
 import json
@@ -24,9 +24,9 @@ import time
 import traceback
 
 try:
-    from climateclient import client as climate_client
+    from climateclient import client as blazar_client
 except ImportError:
-    climate_client = None
+    blazar_client = None
 
 from nova.api.openstack import extensions
 from nova.api.openstack import wsgi
@@ -48,7 +48,7 @@ class ReservationController(wsgi.Controller):
 
     @wsgi.extends
     def create(self, req, resp_obj, body):
-        """Support Climate usage for Nova VMs."""
+        """Support Blazar usage for Nova VMs."""
 
         scheduler_hints = body.get('server', {}).get('scheduler_hints', {})
         lease_params = scheduler_hints.get('lease_params')
@@ -96,13 +96,13 @@ class ReservationController(wsgi.Controller):
                                                     want_objects=True)
                     time.sleep(1)
 
-                # send lease creation request to Climate
-                # this operation should be last, because otherwise Climate
+                # send lease creation request to Blazar
+                # this operation should be last, because otherwise Blazar
                 # Manager may try unshelve instance when it's still active
-                climate_cl = self.get_climate_client(service_catalog,
-                                                     user_roles, auth_token)
-                lease_transaction.set_params(instance_id, climate_cl, nova_ctx)
-                lease = climate_cl.lease.create(**lease_params)
+                blazar_cl = self.get_blazar_client(service_catalog,
+                                                   user_roles, auth_token)
+                lease_transaction.set_params(instance_id, blazar_cl, nova_ctx)
+                lease = blazar_cl.lease.create(**lease_params)
 
                 try:
                     lease_transaction.set_lease_id(lease['id'])
@@ -111,40 +111,39 @@ class ReservationController(wsgi.Controller):
                         _('Lease creation request failed.')
                     )
 
-    def get_climate_client(self, catalog, user_roles, auth_token):
-
-        if not climate_client:
-            raise ImportError(_('No Climate client installed to the '
+    def get_blazar_client(self, catalog, user_roles, auth_token):
+        if not blazar_client:
+            raise ImportError(_('No Blazar client installed to the '
                                 'environment. Please install it to use '
                                 'reservation for Nova instances.'))
 
-        climate_endpoints = None
+        blazar_endpoints = None
         for service in catalog:
             if service['type'] == 'reservation':
-                climate_endpoints = service['endpoints'][0]
-        if not climate_endpoints:
-            raise exception.NotFound(_('No Climate endpoint found in service '
+                blazar_endpoints = service['endpoints'][0]
+        if not blazar_endpoints:
+            raise exception.NotFound(_('No Blazar endpoint found in service '
                                        'catalog.'))
 
-        climate_url = None
+        blazar_url = None
         if 'admin' in user_roles:
-            climate_url = climate_endpoints.get('adminURL')
-        if climate_url is None:
-            climate_url = climate_endpoints.get('publicURL')
-        if climate_url is None:
-            raise exception.NotFound(_('No Climate URL found in service '
+            blazar_url = blazar_endpoints.get('adminURL')
+        if blazar_url is None:
+            blazar_url = blazar_endpoints.get('publicURL')
+        if blazar_url is None:
+            raise exception.NotFound(_('No Blazar URL found in service '
                                        'catalog.'))
 
-        climate_cl = climate_client.Client(climate_url=climate_url,
-                                           auth_token=auth_token)
-        return climate_cl
+        blazar_cl = blazar_client.Client(climate_url=blazar_url,
+                                         auth_token=auth_token)
+        return blazar_cl
 
 
 class LeaseTransaction(object):
     def __init__(self):
         self.lease_id = None
         self.instance_id = None
-        self.climate_cl = None
+        self.blazar_cl = None
         self.nova_ctx = None
 
     def __enter__(self):
@@ -157,7 +156,7 @@ class LeaseTransaction(object):
             LOG.error(_('Error occurred while lease creation. '
                         'Traceback: \n%s') % msg)
             if self.lease_id:
-                self.climate_cl.lease.delete(self.lease_id)
+                self.blazar_cl.lease.delete(self.lease_id)
 
             api = compute.API()
             api.delete(self.nova_ctx, api.get(self.nova_ctx, self.instance_id,
@@ -166,9 +165,9 @@ class LeaseTransaction(object):
     def set_lease_id(self, lease_id):
         self.lease_id = lease_id
 
-    def set_params(self, instance_id, climate_cl, nova_ctx):
+    def set_params(self, instance_id, blazar_cl, nova_ctx):
         self.instance_id = instance_id
-        self.climate_cl = climate_cl
+        self.blazar_cl = blazar_cl
         self.nova_ctx = nova_ctx
 
 

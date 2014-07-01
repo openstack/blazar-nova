@@ -100,7 +100,7 @@ class ClimateFilter(filters.BaseHostFilter):
         if pools:
             if not requested_pools:
                 # Host is in a Pool and none requested
-                LOG.audit(_("In a user pool or in the freepool"))
+                LOG.info(_("In a user pool or in the freepool"))
                 return False
 
             # Find aggregate which matches Pool

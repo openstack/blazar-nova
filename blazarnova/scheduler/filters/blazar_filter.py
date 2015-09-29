@@ -16,12 +16,12 @@
 
 import six
 
-from oslo.config import cfg
+from blazarnova.i18n import _  # noqa
 
 from nova import db
-from nova.openstack.common.gettextutils import _
-from nova.openstack.common import log as logging
 from nova.scheduler import filters
+from oslo_config import cfg
+from oslo_log import log as logging
 
 LOG = logging.getLogger(__name__)
 

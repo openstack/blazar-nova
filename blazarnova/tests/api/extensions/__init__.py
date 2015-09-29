@@ -15,7 +15,7 @@
 
 import datetime
 
-from nova.tests.api.openstack import fakes
+from nova.tests.unit.api.openstack import fakes
 
 import mock
 from nova.api.openstack import compute
@@ -23,12 +23,13 @@ from nova.compute import api as compute_api
 from nova import context
 from nova import test
 from nova import utils
-from oslo.config import cfg
+from oslo_config import cfg
 
 
 UUID = fakes.FAKE_UUID
 CONF = cfg.CONF
-CONF.import_opt('osapi_compute_ext_list', 'nova.api.openstack.compute.contrib')
+CONF.import_opt('osapi_compute_ext_list',
+                'nova.api.openstack.compute.legacy_v2.contrib')
 CONF.import_opt('reservation_start_date',
                 'blazarnova.api.extensions.default_reservation')
 CONF.import_opt('reservation_length_hours',
@@ -60,7 +61,8 @@ class BaseExtensionTestCase(test.TestCase):
         self.fake_instance = fakes.stub_instance(1, uuid=UUID)
         self.flags(
             osapi_compute_extension=[
-                'nova.api.openstack.compute.contrib.select_extensions',
+                'nova.api.openstack.compute.legacy_v2.contrib.'
+                'select_extensions',
                 'blazarnova.api.extensions.default_reservation.'
                 'Default_reservation',
                 'blazarnova.api.extensions.reservation.Reservation'

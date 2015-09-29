@@ -14,7 +14,7 @@
 # limitations under the License.
 
 import mock
-from nova.openstack.common import jsonutils
+from oslo_serialization import jsonutils
 
 from blazarnova.tests.api import extensions
 

@@ -25,9 +25,9 @@ import json
 
 from nova.api.openstack import extensions
 from nova.api.openstack import wsgi
-from nova.openstack.common import log as logging
 from nova import utils
-from oslo.config import cfg
+from oslo_config import cfg
+from oslo_log import log as logging
 from webob import exc
 
 reservation_opts = [
@@ -113,6 +113,8 @@ class Default_reservation(extensions.ExtensionDescriptor):
 
     name = "DefaultReservation"
     alias = "os-default-instance-reservation"
+    updated = "2015-09-29T00:00:00Z"
+    namespace = "blazarnova"
 
     def get_controller_extensions(self):
         controller = DefaultReservationController()

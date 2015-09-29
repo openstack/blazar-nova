@@ -16,10 +16,11 @@ import mock
 
 from blazarnova.scheduler.filters import blazar_filter
 from nova import context
-from nova.openstack.common import log as logging
 from nova import test
-from nova.tests.scheduler import fakes
-from oslo.config import cfg
+from nova.tests.unit.scheduler import fakes
+from nova.virt import fake
+from oslo_config import cfg
+from oslo_log import log as logging
 
 LOG = logging.getLogger(__name__)
 
@@ -43,7 +44,7 @@ class BlazarFilterTestCase(test.TestCase):
         self.fake_context = context.RequestContext('fake', 'fake')
 
         #A fake instance (which has a reservation id 'r-fakeres')
-        fakes.FakeInstance(self.fake_context)
+        fake.FakeInstance('instance1', 'Running', '123')
 
         #And a base filter properties
         self.filter_properties = {

@@ -28,12 +28,13 @@ try:
 except ImportError:
     blazar_client = None
 
+from blazarnova.i18n import _  # noqa
+
 from nova.api.openstack import extensions
 from nova.api.openstack import wsgi
 from nova import compute
 from nova import exception
-from nova.openstack.common.gettextutils import _  # noqa
-from nova.openstack.common import log as logging
+from oslo_log import log as logging
 
 
 LOG = logging.getLogger(__name__)
@@ -176,6 +177,8 @@ class Reservation(extensions.ExtensionDescriptor):
 
     name = "Reservation"
     alias = "os-instance-reservation"
+    updated = "2015-09-29T00:00:00Z"
+    namespace = "blazarnova"
 
     def get_controller_extensions(self):
         controller = ReservationController()

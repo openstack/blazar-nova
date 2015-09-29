@@ -14,7 +14,7 @@
 # limitations under the License.
 
 import mock
-from nova.openstack.common import jsonutils
+from oslo_serialization import jsonutils
 
 from blazarnova.tests.api import extensions
 
@@ -32,7 +32,8 @@ class BlazarReservationTestCase(extensions.BaseExtensionTestCase):
         super(BlazarReservationTestCase, self).setUp()
         self.flags(
             osapi_compute_extension=[
-                'nova.api.openstack.compute.contrib.select_extensions',
+                'nova.api.openstack.compute.legacy_v2.contrib.'
+                'select_extensions',
                 'blazarnova.api.extensions.reservation.Reservation'
             ],
             osapi_compute_ext_list=['Scheduler_hints'])

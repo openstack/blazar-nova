@@ -12,10 +12,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import mock
-
 from blazarnova.scheduler.filters import blazar_filter
-from nova import context
+from nova import objects
 from nova import test
 from nova.tests.unit.scheduler import fakes
 from nova.virt import fake
@@ -34,250 +32,241 @@ class BlazarFilterTestCase(test.TestCase):
     def setUp(self):
         super(BlazarFilterTestCase, self).setUp()
 
-        #Let's have at hand a brand new blazar filter
+        # Let's have at hand a brand new blazar filter
         self.f = blazar_filter.BlazarFilter()
 
-        #A fake host state
+        # A fake host state
         self.host = fakes.FakeHostState('host1', 'node1', {})
 
-        #A fake context
-        self.fake_context = context.RequestContext('fake', 'fake')
-
-        #A fake instance (which has a reservation id 'r-fakeres')
+        # A fake instance (which has a reservation id 'r-fakeres')
         fake.FakeInstance('instance1', 'Running', '123')
 
-        #And a base filter properties
-        self.filter_properties = {
-            "context": self.fake_context,
-            "scheduler_hints": {}
-        }
+        # And a base spec_obj
+        self.spec_obj = objects.RequestSpec(
+            project_id='fakepj',
+            scheduler_hints={}
+        )
 
-    @mock.patch('blazarnova.scheduler.filters.blazar_filter.db')
-    def test_blazar_filter_no_pool_available_requested(self, fake_nova_db):
+    def test_blazar_filter_no_pool_available_requested(self):
 
-        #Given the host doesn't belong to any pool
-        fake_nova_db.aggregate_get_by_host.return_value = []
+        # Given the host doesn't belong to any pool
+        self.host.aggregates = []
 
-        #And the 'r-fakeres' pool is requested in the filter
-        self.filter_properties['scheduler_hints']['reservation'] = 'r-fakeres'
+        # And the 'r-fakeres' pool is requested in the filter
+        self.spec_obj.scheduler_hints = {'reservation': ['r-fakeres']}
 
-        #When the host goes through the filter
+        # When the host goes through the filter
         self.host.passes = self.f.host_passes(
             self.host,
-            self.filter_properties)
+            self.spec_obj)
 
-        #Then the host shall NOT pass
+        # Then the host shall NOT pass
         self.assertFalse(self.host.passes)
 
-    @mock.patch('blazarnova.scheduler.filters.blazar_filter.db')
-    def test_blazar_filter_no_pool_available_not_requested(
-            self,
-            fake_nova_db):
+    def test_blazar_filter_no_pool_available_not_requested(self):
 
-        #Given the host doesn't belong to any pool
-        fake_nova_db.aggregate_get_by_host.return_value = []
+        # Given the host doesn't belong to any pool
+        self.host.aggregates = []
 
-        #And the filter doesn't require any pool (using filter as in setup())
+        # And the filter doesn't require any pool (using filter as in setup())
 
-        #When the host goes through the filter
+        # When the host goes through the filter
         self.host.passes = self.f.host_passes(
             self.host,
-            self.filter_properties)
+            self.spec_obj)
 
-        #Then the host shall pass
+        # Then the host shall pass
         self.assertTrue(self.host.passes)
 
-    @mock.patch('blazarnova.scheduler.filters.blazar_filter.db')
-    def test_blazar_filter_host_in_freepool_and_none_requested(
-            self,
-            fake_nova_db):
+    def test_blazar_filter_host_in_freepool_and_none_requested(self):
 
-        #Given the host is in the free pool (named "freepool")
-        fake_nova_db.aggregate_get_by_host.return_value = \
-            [{'name':
-              cfg.CONF['blazar:physical:host'].aggregate_freepool_name,
-              'availability_zone': 'unknown',
-              'metadetails': {self.fake_context.project_id: True}}]
+        # Given the host is in the free pool (named "freepool")
+        self.host.aggregates = [
+            objects.Aggregate(
+                name=cfg.CONF['blazar:physical:host'].aggregate_freepool_name,
+                metadata={'availability_zone': 'unknown',
+                          self.spec_obj.project_id: True})]
 
-        #And the filter doesn't require any pool (using filter as in setup())
+        # And the filter doesn't require any pool (using filter as in setup())
 
-        #When the host goes through the filter
+        # When the host goes through the filter
         self.host.passes = self.f.host_passes(
             self.host,
-            self.filter_properties)
+            self.spec_obj)
 
-        #Then the host shall NOT pass
+        # Then the host shall NOT pass
         self.assertFalse(self.host.passes)
 
-    @mock.patch('blazarnova.scheduler.filters.blazar_filter.db')
-    def test_blazar_filter_host_in_pool_none_requested(self, fake_nova_db):
+    def test_blazar_filter_host_in_pool_none_requested(self):
 
-        #Given the host belongs to the 'r-fakeres' reservation pool
-        fake_nova_db.aggregate_get_by_host.return_value = \
-            [{'name': 'r-fakeres',
-              'availability_zone':
-              cfg.CONF['blazar:physical:host'].blazar_az_prefix + 'XX',
-              'metadetails': {self.fake_context.project_id: True}}]
+        # Given the host belongs to the 'r-fakeres' reservation pool
+        self.host.aggregates = [
+            objects.Aggregate(
+                name='r-fakeres',
+                metadata={'availability_zone': (cfg
+                                                .CONF['blazar:physical:host']
+                                                .blazar_az_prefix) + 'XX',
+                          self.spec_obj.project_id: True})]
 
-        #And the filter doesn't require any pool (using filter as in setup())
+        # And the filter doesn't require any pool (using filter as in setup())
 
-        #When the host goes through the filter
+        # When the host goes through the filter
         self.host.passes = self.f.host_passes(
             self.host,
-            self.filter_properties)
+            self.spec_obj)
 
-        #Then the host shall NOT pass
+        # Then the host shall NOT pass
         self.assertFalse(self.host.passes)
 
-    @mock.patch('blazarnova.scheduler.filters.blazar_filter.db')
-    def test_blazar_filter_host_not_in_ant_pool(self, fake_nova_db):
+    def test_blazar_filter_host_not_in_ant_pool(self):
 
-        #Given the host belongs to a pool different to 'r-fakeres'
-        fake_nova_db.aggregate_get_by_host.return_value = \
-            [{'name': 'not_the_r-fackers_pool',
-              'availability_zone': 'unknown',
-              'metadetails': {self.fake_context.project_id: True}}]
+        # Given the host belongs to a pool different to 'r-fakeres'
+        self.host.aggregates = [
+            objects.Aggregate(
+                name='not_the_r-fakeres_pool',
+                metadata={'availability_zone': 'unknown',
+                          self.spec_obj.project_id: True})]
 
-        #And the 'r-fakeres' pool is requested in the filter
-        self.filter_properties['scheduler_hints']['reservation'] = 'r-fakeres'
+        # And the 'r-fakeres' pool is requested in the filter
+        self.spec_obj.scheduler_hints = {'reservation': ['r-fakeres']}
 
-        #When the host goes through the filter
+        # When the host goes through the filter
         self.host.passes = self.f.host_passes(
             self.host,
-            self.filter_properties)
+            self.spec_obj)
 
-        #Then the host shall NOT pass
+        # Then the host shall NOT pass
         self.assertFalse(self.host.passes)
 
-    @mock.patch('blazarnova.scheduler.filters.blazar_filter.db')
-    def test_blazar_filter_host_not_auth_in_current_tenant(
-            self,
-            fake_nova_db):
+    def test_blazar_filter_host_not_auth_in_current_tenant(self):
 
-        #Given the host is NOT authorized in the current tenant
-        #And thee pool name is NOT 'r-fakeres'
-        fake_nova_db.aggregate_get_by_host.return_value = \
-            [{'name': 'r-fackers',
-              'availability_zone': 'unknown',
-              'metadetails': {self.fake_context.project_id: False}}]
+        # Given the host is NOT authorized in the current tenant
+        # And thee pool name is NOT 'r-fakeres'
+        self.host.aggregates = [
+            objects.Aggregate(
+                name='r-fackers',
+                metadata={'availability_zone': 'unknown',
+                          self.spec_obj.project_id: False})]
 
-        #And the 'r-fakeres' pool is requested in the filter
-        self.filter_properties['scheduler_hints']['reservation'] = 'r-fakeres'
+        # And the 'r-fakeres' pool is requested in the filter
+        self.spec_obj.scheduler_hints = {'reservation': ['r-fakeres']}
 
-        #When the host goes through the filter
+        # When the host goes through the filter
         self.host.passes = self.f.host_passes(
             self.host,
-            self.filter_properties)
+            self.spec_obj)
 
-        #Then the host shall NOT pass
+        # Then the host shall NOT pass
         self.assertFalse(self.host.passes)
 
-    @mock.patch('blazarnova.scheduler.filters.blazar_filter.db')
-    def test_blazar_filter_host_auth_in_current_tenant(self, fake_nova_db):
+    def test_blazar_filter_host_auth_in_current_tenant(self):
 
-        #Given the host is authorized in the current tenant
-        #And thee pool name is 'r-fakeres'
-        fake_nova_db.aggregate_get_by_host.return_value = \
-            [{'name': 'r-fakeres',
-              'availability_zone':
-              cfg.CONF['blazar:physical:host'].blazar_az_prefix,
-              'metadetails': {self.fake_context.project_id: True}}]
+        # Given the host is authorized in the current tenant
+        # And the pool name is 'r-fakeres'
+        self.host.aggregates = [
+            objects.Aggregate(
+                name='r-fakeres',
+                metadata={'availability_zone': (cfg
+                                                .CONF['blazar:physical:host']
+                                                .blazar_az_prefix),
+                          self.spec_obj.project_id: True})]
 
-        #And the 'r-fakeres' pool is requested in the filter
-        self.filter_properties['scheduler_hints']['reservation'] = 'r-fakeres'
+        # And the 'r-fakeres' pool is requested in the filter
+        self.spec_obj.scheduler_hints = {'reservation': ['r-fakeres']}
 
-        #When the host goes through the filter
+        # When the host goes through the filter
         self.host.passes = self.f.host_passes(
             self.host,
-            self.filter_properties)
+            self.spec_obj)
 
-        #Then the host shall pass
+        # Then the host shall pass
         self.assertTrue(self.host.passes)
 
-    @mock.patch('blazarnova.scheduler.filters.blazar_filter.db')
-    def test_blazar_filter_host_authorized_by_owner(self, fake_nova_db):
-        #Given the host blazar owner is the current project id
-        #And thee pool name is 'r-fakeres'
-        fake_nova_db.aggregate_get_by_host.return_value = \
-            [{'name': 'r-fakeres',
-              'availability_zone':
-              cfg.CONF['blazar:physical:host'].blazar_az_prefix,
-              'metadetails': {self.fake_context.project_id: False,
-                              cfg.CONF['blazar:physical:host'].
-                              blazar_owner: self.fake_context.project_id}}]
+    def test_blazar_filter_host_authorized_by_owner(self):
+        # Given the host blazar owner is the current project id
+        # And the pool name is 'r-fakeres'
+        self.host.aggregates = [
+            objects.Aggregate(
+                name='r-fakeres',
+                metadata={'availability_zone': (cfg
+                                                .CONF['blazar:physical:host']
+                                                .blazar_az_prefix),
+                          cfg.CONF['blazar:physical:host'].blazar_owner: (
+                              self.spec_obj.project_id),
+                          self.spec_obj.project_id: False})]
 
-        #And the 'r-fakeres' pool is requested in the filter
-        self.filter_properties['scheduler_hints']['reservation'] = 'r-fakeres'
+        # And the 'r-fakeres' pool is requested in the filter
+        self.spec_obj.scheduler_hints = {'reservation': ['r-fakeres']}
 
-        #When the host goes through the filter
+        # When the host goes through the filter
         self.host.passes = self.f.host_passes(
             self.host,
-            self.filter_properties)
+            self.spec_obj)
 
-        #Then the host shall pass
+        # Then the host shall pass
         self.assertTrue(self.host.passes)
 
-    @mock.patch('blazarnova.scheduler.filters.blazar_filter.db')
-    def test_blazar_filter_host_not_authorized_by_owner(self, fake_nova_db):
+    def test_blazar_filter_host_not_authorized_by_owner(self):
 
-        #Given the host blazar owner is NOT the current project id
-        #And thee pool name is 'r-fakeres'
-        fake_nova_db.aggregate_get_by_host.return_value = \
-            [{'name': 'r-fakeres',
-              'availability_zone':
-              cfg.CONF['blazar:physical:host'].blazar_az_prefix,
-              'metadetails': {self.fake_context.project_id: False,
-                              cfg.CONF['blazar:physical:host'].
-                              blazar_owner: 'another_project_id'}}]
+        # Given the host blazar owner is NOT the current project id
+        # And the pool name is 'r-fakeres'
+        self.host.aggregates = [
+            objects.Aggregate(
+                name='r-fakeres',
+                metadata={'availability_zone': (cfg
+                                                .CONF['blazar:physical:host']
+                                                .blazar_az_prefix),
+                          cfg.CONF['blazar:physical:host'].blazar_owner: (
+                              'another_project_id')})]
 
-        #And the 'r-fakeres' pool is requested in the filter
-        self.filter_properties['scheduler_hints']['reservation'] = 'r-fakeres'
+        # And the 'r-fakeres' pool is requested in the filter
+        self.spec_obj.scheduler_hints = {'reservation': ['r-fakeres']}
 
-        #When the host goes through the filter
+        # When the host goes through the filter
         self.host.passes = self.f.host_passes(
             self.host,
-            self.filter_properties)
+            self.spec_obj)
 
-        #Then the host shall pass
+        # Then the host shall NOT pass
         self.assertFalse(self.host.passes)
 
-    @mock.patch('blazarnova.scheduler.filters.blazar_filter.db')
-    def test_blazar_filter_host_not_in_requested_pools(self, fake_nova_db):
+    def test_blazar_filter_host_not_in_requested_pools(self):
 
-        #Given the host is in the free pool
-        fake_nova_db.aggregate_get_by_host.return_value = \
-            [{'name': cfg.CONF['blazar:physical:host'].
-                aggregate_freepool_name,
-              'availability_zone': 'unknown'}]
+        # Given the host is in the free pool
+        self.host.aggregates = [
+            objects.Aggregate(
+                name=cfg.CONF['blazar:physical:host'].aggregate_freepool_name,
+                metadata={'availability_zone': 'unknown'})]
 
-        #And the 'r-fakeres' pool is requested in the filter
-        self.filter_properties['scheduler_hints']['reservation'] = 'r-fakeres'
+        # And the 'r-fakeres' pool is requested in the filter
+        self.spec_obj.scheduler_hints = {'reservation': ['r-fakeres']}
 
-        #When the host goes through the filter
+        # When the host goes through the filter
         self.host.passes = self.f.host_passes(
             self.host,
-            self.filter_properties)
+            self.spec_obj)
 
-        #Then the host shall NOT pass
+        # Then the host shall NOT pass
         self.assertFalse(self.host.passes)
 
-    @mock.patch('blazarnova.scheduler.filters.blazar_filter.db')
-    def test_blazar_filter_unicode_requested_pool(self, fake_nova_db):
+    def test_blazar_filter_unicode_requested_pool(self):
 
-        #Given the host is in a pool with unicode characters
-        fake_nova_db.aggregate_get_by_host.return_value = \
-            [{'name': U'r-fake~es',
-              'availability_zone':
-              cfg.CONF['blazar:physical:host'].blazar_az_prefix,
-             'metadetails': {self.fake_context.project_id: True}}]
+        # Given the host is in a pool with unicode characters
+        self.host.aggregates = [
+            objects.Aggregate(
+                name=U'r-fakeres',
+                metadata={'availability_zone': (cfg
+                                                .CONF['blazar:physical:host']
+                                                .blazar_az_prefix),
+                          self.spec_obj.project_id: True})]
 
-        #And the filter is requesting for a host with the same name (ucode)
-        self.filter_properties['scheduler_hints']['reservation'] = U'r-fake~es'
+        # And the filter is requesting for a host with the same name (ucode)
+        self.spec_obj.scheduler_hints = {'reservation': [U'r-fakeres']}
 
-        #When the host goes through the filter
+        # When the host goes through the filter
         self.host.passes = self.f.host_passes(
             self.host,
-            self.filter_properties)
+            self.spec_obj)
 
-        #Then the host shall pass
+        # Then the host shall pass
         self.assertTrue(self.host.passes)

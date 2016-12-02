@@ -25,10 +25,12 @@ import json
 
 from nova.api.openstack import extensions
 from nova.api.openstack import wsgi
+from nova import compute
 from nova import utils
 from oslo_config import cfg
 from oslo_log import log as logging
 from webob import exc
+
 
 reservation_opts = [
     cfg.StrOpt('reservation_start_date',
@@ -49,11 +51,14 @@ CONF = cfg.CONF
 CONF.register_opts(reservation_opts)
 
 LOG = logging.getLogger(__name__)
-authorize = extensions.extension_authorizer('compute', 'default_reservation')
 
 
 class DefaultReservationController(wsgi.Controller):
     """Add default reservation flags to every VM started."""
+
+    def __init__(self, *args, **kwargs):
+        super(DefaultReservationController, self).__init__(*args, **kwargs)
+        self.compute_api = compute.API()
 
     @wsgi.extends
     def create(self, req, body):
@@ -65,9 +70,7 @@ class DefaultReservationController(wsgi.Controller):
         if not self.is_valid_body(body, 'server'):
             raise exc.HTTPUnprocessableEntity()
 
-        if 'server' in body:
-            scheduler_hints = body['server'].get('scheduler_hints', {})
-        elif 'os:scheduler_hints' in body:
+        if 'os:scheduler_hints' in body:
             scheduler_hints = body['os:scheduler_hints']
         else:
             scheduler_hints = body.get('OS-SCH-HNT:scheduler_hints', {})
@@ -94,29 +97,27 @@ class DefaultReservationController(wsgi.Controller):
 
         default_hints = {'lease_params': json.dumps(lease_params)}
 
-        if 'server' in body:
-            if 'scheduler_hints' in body['server']:
-                body['server']['scheduler_hints'].update(default_hints)
-            else:
-                body['server']['scheduler_hints'] = default_hints
+        if 'os:scheduler_hints' in body:
+            body['os:scheduler_hints'].update(default_hints)
+        elif 'OS-SCH-HNT:scheduler_hints' in body:
+            body['OS-SCH-HNT:scheduler_hints'].update(default_hints)
         else:
-            attr = 'OS-SCH-HNT:scheduler_hints'
-            if 'os:scheduler_hints' in body:
-                body['os:scheduler_hints'].update(default_hints)
-            elif attr in body and 'lease_params' not in body[attr]:
-                body[attr].update(default_hints)
-        yield
+            body['os:scheduler_hints'] = default_hints
 
 
-class Default_reservation(extensions.ExtensionDescriptor):
+class Default_reservation(extensions.V21APIExtensionBase):
     """Instance reservation system."""
 
     name = "DefaultReservation"
     alias = "os-default-instance-reservation"
-    updated = "2015-09-29T00:00:00Z"
-    namespace = "blazarnova"
+    updated = "2016-11-30T00:00:00Z"
+    version = 1
 
     def get_controller_extensions(self):
+        return []
+
+    def get_resources(self):
         controller = DefaultReservationController()
-        extension = extensions.ControllerExtension(self, 'servers', controller)
+        extension = extensions.ResourceExtension(
+            self.alias, controller, member_actions={"action": "POST"})
         return [extension]

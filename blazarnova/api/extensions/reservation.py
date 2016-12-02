@@ -29,7 +29,6 @@ except ImportError:
     blazar_client = None
 
 from blazarnova.i18n import _  # noqa
-
 from nova.api.openstack import extensions
 from nova.api.openstack import wsgi
 from nova import compute
@@ -38,7 +37,6 @@ from oslo_log import log as logging
 
 
 LOG = logging.getLogger(__name__)
-authorize = extensions.extension_authorizer('compute', 'reservation')
 
 
 class ReservationController(wsgi.Controller):
@@ -51,8 +49,12 @@ class ReservationController(wsgi.Controller):
     def create(self, req, resp_obj, body):
         """Support Blazar usage for Nova VMs."""
 
-        scheduler_hints = body.get('server', {}).get('scheduler_hints', {})
-        lease_params = scheduler_hints.get('lease_params')
+        if 'os:scheduler_hints' in body:
+            scheduler_hints = body['os:scheduler_hints']
+        else:
+            scheduler_hints = body.get('OS-SCH-HNT:scheduler_hints', {})
+
+        lease_params = scheduler_hints.get('lease_params', {})
 
         if lease_params:
             try:
@@ -172,15 +174,18 @@ class LeaseTransaction(object):
         self.nova_ctx = nova_ctx
 
 
-class Reservation(extensions.ExtensionDescriptor):
+class Reservation(extensions.V21APIExtensionBase):
     """Instance reservation system."""
 
     name = "Reservation"
     alias = "os-instance-reservation"
-    updated = "2015-09-29T00:00:00Z"
-    namespace = "blazarnova"
+    updated = "2016-11-30T00:00:00Z"
+    version = 1
 
     def get_controller_extensions(self):
         controller = ReservationController()
         extension = extensions.ControllerExtension(self, 'servers', controller)
         return [extension]
+
+    def get_resources(self):
+        return []

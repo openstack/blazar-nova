@@ -14,15 +14,17 @@
 # limitations under the License.
 
 import mock
-from oslo_serialization import jsonutils
 
+from blazarnova.api.extensions import reservation
 from blazarnova.tests.api import extensions
+from nova.api.openstack import wsgi
+from oslo_serialization import jsonutils
 
 
 class BlazarReservationTestCase(extensions.BaseExtensionTestCase):
     """Blazar API extensions test case.
 
-    This test case provides tests for Default_reservation extension working
+    This test case provides tests for Reservation extension working
     together with Reservation extension passing hints to Nova and
     sending lease creation request to Blazar.
     """
@@ -30,13 +32,7 @@ class BlazarReservationTestCase(extensions.BaseExtensionTestCase):
     def setUp(self):
         """Set up testing environment."""
         super(BlazarReservationTestCase, self).setUp()
-        self.flags(
-            osapi_compute_extension=[
-                'nova.api.openstack.compute.legacy_v2.contrib.'
-                'select_extensions',
-                'blazarnova.api.extensions.reservation.Reservation'
-            ],
-            osapi_compute_ext_list=['Scheduler_hints'])
+        self.controller = reservation.ReservationController()
 
     @mock.patch('blazarnova.api.extensions.reservation.blazar_client')
     def test_create(self, mock_module):
@@ -57,17 +53,17 @@ class BlazarReservationTestCase(extensions.BaseExtensionTestCase):
         }
 
         self.req.body = jsonutils.dumps(body)
-        res = self.req.get_response(self.app)
+        resp_obj = wsgi.ResponseObject({'server': {'id': 'fakeId'}})
+        self.controller.create(self.req, resp_obj, body)
 
         mock_module.Client.assert_called_once_with(climate_url='fake',
                                                    auth_token='fake_token')
+
         self.lease_controller.create.assert_called_once_with(
             reservations=[
                 {'resource_type': 'virtual:instance',
-                 'resource_id': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'}],
+                 'resource_id': 'fakeId'}],
             end='2014-02-10 12:00',
             events=[],
             start='2014-02-09 12:00',
             name='some_name')
-
-        self.assertEqual(202, res.status_int)

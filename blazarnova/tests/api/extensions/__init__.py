@@ -15,21 +15,19 @@
 
 import datetime
 
-from nova.tests.unit.api.openstack import fakes
-
 import mock
+
 from nova.api.openstack import compute
 from nova.compute import api as compute_api
 from nova import context
 from nova import test
+from nova.tests.unit.api.openstack import fakes
 from nova import utils
 from oslo_config import cfg
 
 
 UUID = fakes.FAKE_UUID
 CONF = cfg.CONF
-CONF.import_opt('osapi_compute_ext_list',
-                'nova.api.openstack.compute.legacy_v2.contrib')
 CONF.import_opt('reservation_start_date',
                 'blazarnova.api.extensions.default_reservation')
 CONF.import_opt('reservation_length_hours',
@@ -59,22 +57,12 @@ class BaseExtensionTestCase(test.TestCase):
         """Set up testing environment."""
         super(BaseExtensionTestCase, self).setUp()
         self.fake_instance = fakes.stub_instance(1, uuid=UUID)
-        self.flags(
-            osapi_compute_extension=[
-                'nova.api.openstack.compute.legacy_v2.contrib.'
-                'select_extensions',
-                'blazarnova.api.extensions.default_reservation.'
-                'Default_reservation',
-                'blazarnova.api.extensions.reservation.Reservation'
-            ],
-            osapi_compute_ext_list=['Scheduler_hints'])
 
         self.lease_controller = mock.MagicMock()
-        self.lease_controller.create = mock.MagicMock()
         self.mock_client = mock.MagicMock()
         self.mock_client.lease = self.lease_controller
 
-        self.req = fakes.HTTPRequest.blank('/fake/servers')
+        self.req = fakes.HTTPRequestV21.blank('/fake/servers')
         self.req.method = 'POST'
         self.req.content_type = 'application/json'
         self.req.environ.update({
@@ -86,9 +74,8 @@ class BaseExtensionTestCase(test.TestCase):
         })
 
         self.l_name = 'lease_123'
-        self.app = compute.APIRouter(init_only=('servers',))
+        self.app = compute.APIRouterV21()
         self.stubs.Set(utils, 'generate_uid', lambda name, size: self.l_name)
-        self.stubs.Set(compute_api.API, 'create', self._fake_create)
         self.stubs.Set(compute_api.API, 'get', self._fake_get)
         self.stubs.Set(compute_api.API, 'shelve', self._fake_shelve)
 
@@ -100,9 +87,6 @@ class BaseExtensionTestCase(test.TestCase):
         lease_end = datetime.datetime.utcnow() + self.delta
         self.default_lease_end = lease_end.strftime('%Y-%m-%d %H:%M')
         self.default_lease_start = 'now'
-
-    def _fake_create(self, *args, **kwargs):
-        return [self.fake_instance], ''
 
     def _fake_get(self, *args, **kwargs):
         self.fake_instance['vm_state'] = 'active'

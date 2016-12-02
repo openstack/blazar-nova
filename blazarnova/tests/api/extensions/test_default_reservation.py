@@ -14,9 +14,12 @@
 # limitations under the License.
 
 import mock
-from oslo_serialization import jsonutils
 
+from blazarnova.api.extensions import default_reservation
+from blazarnova.api.extensions import reservation
 from blazarnova.tests.api import extensions
+from nova.api.openstack import wsgi
+from oslo_serialization import jsonutils
 
 
 class BlazarDefaultReservationTestCase(extensions.BaseExtensionTestCase):
@@ -30,6 +33,9 @@ class BlazarDefaultReservationTestCase(extensions.BaseExtensionTestCase):
     def setUp(self):
         """Set up testing environment."""
         super(BlazarDefaultReservationTestCase, self).setUp()
+        self.rsrv_controller = reservation.ReservationController()
+        self.default_rsrv_controller = default_reservation\
+            .DefaultReservationController()
 
     @mock.patch('blazarnova.api.extensions.reservation.blazar_client')
     def test_create_with_default(self, mock_module):
@@ -48,20 +54,21 @@ class BlazarDefaultReservationTestCase(extensions.BaseExtensionTestCase):
         }
 
         self.req.body = jsonutils.dumps(body)
-        res = self.req.get_response(self.app)
+        self.default_rsrv_controller.create(self.req, body)
+        resp_obj = wsgi.ResponseObject({'server': {'id': 'fakeId'}})
+        self.rsrv_controller.create(self.req, resp_obj, body)
 
         mock_module.Client.assert_called_once_with(climate_url='fake',
                                                    auth_token='fake_token')
+
         self.lease_controller.create.assert_called_once_with(
             reservations=[
                 {'resource_type': 'virtual:instance',
-                 'resource_id': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'}],
+                 'resource_id': 'fakeId'}],
             end=self.default_lease_end,
             events=[],
             start='now',
-            name='lease_123')
-
-        self.assertEqual(202, res.status_int)
+            name=self.l_name)
 
     @mock.patch('blazarnova.api.extensions.reservation.blazar_client')
     def test_create_with_passed_args(self, mock_module):
@@ -82,17 +89,18 @@ class BlazarDefaultReservationTestCase(extensions.BaseExtensionTestCase):
         }
 
         self.req.body = jsonutils.dumps(body)
-        res = self.req.get_response(self.app)
+        self.default_rsrv_controller.create(self.req, body)
+        resp_obj = wsgi.ResponseObject({'server': {'id': 'fakeId'}})
+        self.rsrv_controller.create(self.req, resp_obj, body)
 
         mock_module.Client.assert_called_once_with(climate_url='fake',
                                                    auth_token='fake_token')
+
         self.lease_controller.create.assert_called_once_with(
             reservations=[
                 {'resource_type': 'virtual:instance',
-                 'resource_id': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'}],
+                 'resource_id': 'fakeId'}],
             end=self.default_lease_end,
             events=[],
             start='now',
             name='other_name')
-
-        self.assertEqual(202, res.status_int)

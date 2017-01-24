@@ -2,7 +2,3 @@
 scheduler_available_filters = nova.scheduler.filters.all_filters
 scheduler_available_filters = blazarnova.scheduler.filters.blazar_filter.ClimateFilter
 scheduler_default_filters=RetryFilter,AvailabilityZoneFilter,RamFilter,ComputeFilter,ComputeCapabilitiesFilter,ImagePropertiesFilter,ClimateFilter
-
-osapi_compute_extension = nova.api.openstack.compute.contrib.standard_extensions
-osapi_compute_extension = blazarnova.api.extensions.default_reservation.Default_reservation
-osapi_compute_extension = blazarnova.api.extensions.reservation.Reservation

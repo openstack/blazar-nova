@@ -24,7 +24,7 @@ import time
 import traceback
 
 try:
-    from climateclient import client as blazar_client
+    from blazarclient import client as blazar_client
 except ImportError:
     blazar_client = None
 
@@ -137,7 +137,7 @@ class ReservationController(wsgi.Controller):
             raise exception.NotFound(_('No Blazar URL found in service '
                                        'catalog.'))
 
-        blazar_cl = blazar_client.Client(climate_url=blazar_url,
+        blazar_cl = blazar_client.Client(blazar_url=blazar_url,
                                          auth_token=auth_token)
         return blazar_cl
 

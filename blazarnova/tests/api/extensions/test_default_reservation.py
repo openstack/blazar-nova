@@ -58,7 +58,7 @@ class BlazarDefaultReservationTestCase(extensions.BaseExtensionTestCase):
         resp_obj = wsgi.ResponseObject({'server': {'id': 'fakeId'}})
         self.rsrv_controller.create(self.req, resp_obj, body)
 
-        mock_module.Client.assert_called_once_with(climate_url='fake',
+        mock_module.Client.assert_called_once_with(blazar_url='fake',
                                                    auth_token='fake_token')
 
         self.lease_controller.create.assert_called_once_with(
@@ -93,7 +93,7 @@ class BlazarDefaultReservationTestCase(extensions.BaseExtensionTestCase):
         resp_obj = wsgi.ResponseObject({'server': {'id': 'fakeId'}})
         self.rsrv_controller.create(self.req, resp_obj, body)
 
-        mock_module.Client.assert_called_once_with(climate_url='fake',
+        mock_module.Client.assert_called_once_with(blazar_url='fake',
                                                    auth_token='fake_token')
 
         self.lease_controller.create.assert_called_once_with(

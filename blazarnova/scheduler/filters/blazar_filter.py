@@ -51,7 +51,7 @@ opts = [
 cfg.CONF.register_opts(opts, 'blazar:physical:host')
 
 
-class ClimateFilter(filters.BaseHostFilter):
+class BlazarFilter(filters.BaseHostFilter):
     """Blazar Filter for nova-scheduler."""
 
     run_filter_once_per_request = True
@@ -138,4 +138,4 @@ class ClimateFilter(filters.BaseHostFilter):
 
 # For backward compatibility. This should be done in this way due to how Nova
 # imports the filters
-BlazarFilter = ClimateFilter
+ClimateFilter = BlazarFilter

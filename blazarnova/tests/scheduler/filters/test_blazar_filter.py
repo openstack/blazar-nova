@@ -18,9 +18,6 @@ from nova import test
 from nova.tests.unit.scheduler import fakes
 from nova.virt import fake
 from oslo_config import cfg
-from oslo_log import log as logging
-
-LOG = logging.getLogger(__name__)
 
 
 class BlazarFilterTestCase(test.TestCase):

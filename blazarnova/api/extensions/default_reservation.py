@@ -28,7 +28,6 @@ from nova.api.openstack import wsgi
 from nova import compute
 from nova import utils
 from oslo_config import cfg
-from oslo_log import log as logging
 from webob import exc
 
 
@@ -49,8 +48,6 @@ reservation_opts = [
 
 CONF = cfg.CONF
 CONF.register_opts(reservation_opts)
-
-LOG = logging.getLogger(__name__)
 
 
 class DefaultReservationController(wsgi.Controller):

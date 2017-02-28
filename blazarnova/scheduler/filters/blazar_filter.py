@@ -136,6 +136,8 @@ class BlazarFilter(filters.BaseHostFilter):
                 return False
             return True
 
+
 # For backward compatibility. This should be done in this way due to how Nova
 # imports the filters
-ClimateFilter = BlazarFilter
+class ClimateFilter(BlazarFilter):
+    pass

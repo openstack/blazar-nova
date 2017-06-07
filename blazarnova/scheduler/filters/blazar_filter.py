@@ -36,7 +36,7 @@ opts = [
                default='blazar:owner',
                help='Aggregate metadata key for knowing owner project_id'),
     cfg.StrOpt('blazar_az_prefix',
-               default='blazar:',
+               default='blazar_',
                help='Prefix for Availability Zones created by Blazar')
 ]
 
@@ -76,8 +76,11 @@ class BlazarFilter(filters.BaseHostFilter):
         aggregates = host_state.aggregates
         pools = []
         for agg in aggregates:
-            if str(agg.availability_zone).startswith(
-                    cfg.CONF['blazar:physical:host'].blazar_az_prefix):
+            if (str(agg.availability_zone).startswith(
+                    cfg.CONF['blazar:physical:host'].blazar_az_prefix)
+                    # NOTE(hiro-kobayashi): following 2 lines are for keeping
+                    # backward compatibility
+                    or str(agg.availability_zone).startswith('blazar:')):
                 pools.append(agg)
             if agg.name == (
                     cfg.CONF['blazar:physical:host'].aggregate_freepool_name):

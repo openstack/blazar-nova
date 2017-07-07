@@ -24,28 +24,20 @@ from oslo_log import log as logging
 
 LOG = logging.getLogger(__name__)
 
-deprecated_group = 'climate:physical:host'
 opts = [
     cfg.StrOpt('aggregate_freepool_name',
                default='freepool',
                help='Name of the special aggregate where all hosts '
-                    'are candidate for physical host reservation',
-               deprecated_group=deprecated_group),
+                    'are candidate for physical host reservation'),
     cfg.StrOpt('project_id_key',
                default='blazar:tenant',
-               deprecated_name='tenant_id_key',
-               help='Aggregate metadata value for key matching project_id',
-               deprecated_group=deprecated_group),
+               help='Aggregate metadata value for key matching project_id'),
     cfg.StrOpt('blazar_owner',
                default='blazar:owner',
-               deprecated_name='climate_owner',
-               help='Aggregate metadata key for knowing owner project_id',
-               deprecated_group=deprecated_group),
+               help='Aggregate metadata key for knowing owner project_id'),
     cfg.StrOpt('blazar_az_prefix',
                default='blazar:',
-               deprecated_name='climate_az_prefix',
-               help='Prefix for Availability Zones created by Blazar',
-               deprecated_group=deprecated_group),
+               help='Prefix for Availability Zones created by Blazar')
 ]
 
 cfg.CONF.register_opts(opts, 'blazar:physical:host')
@@ -84,9 +76,8 @@ class BlazarFilter(filters.BaseHostFilter):
         aggregates = host_state.aggregates
         pools = []
         for agg in aggregates:
-            if (str(agg.availability_zone).startswith(
-                    cfg.CONF['blazar:physical:host'].blazar_az_prefix)
-                    or str(agg.availability_zone).startswith('climate:')):
+            if str(agg.availability_zone).startswith(
+                    cfg.CONF['blazar:physical:host'].blazar_az_prefix):
                 pools.append(agg)
             if agg.name == (
                     cfg.CONF['blazar:physical:host'].aggregate_freepool_name):
@@ -114,10 +105,7 @@ class BlazarFilter(filters.BaseHostFilter):
                     #  until we modify the reservation pool for including the
                     #  project_id key as for any other extra project
                     owner = cfg.CONF['blazar:physical:host'].blazar_owner
-                    # NOTE(pafuent): climate:owner was the previous default
-                    # value.
-                    owner_project_id = pool.metadata.get(
-                        owner, pool.metadata.get('climate:owner'))
+                    owner_project_id = pool.metadata.get(owner)
                     if owner_project_id == spec_obj.project_id:
                         return True
                     LOG.info(_("Unauthorized request to use Pool "
@@ -135,9 +123,3 @@ class BlazarFilter(filters.BaseHostFilter):
                 # Host is not in a Pool and Pool requested
                 return False
             return True
-
-
-# For backward compatibility. This should be done in this way due to how Nova
-# imports the filters
-class ClimateFilter(BlazarFilter):
-    pass

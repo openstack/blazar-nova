@@ -48,6 +48,51 @@ class BlazarFilter(filters.BaseHostFilter):
 
     run_filter_once_per_request = True
 
+    def fetch_blazar_pools(self, host_state):
+        # Get any reservation pools this host is part of
+        # Note this include possibly the freepool
+        aggregates = host_state.aggregates
+        pools = []
+        for agg in aggregates:
+            if (str(agg.availability_zone).startswith(
+                    cfg.CONF['blazar:physical:host'].blazar_az_prefix)
+                    # NOTE(hiro-kobayashi): following 2 lines are for keeping
+                    # backward compatibility
+                    or str(agg.availability_zone).startswith('blazar:')):
+                pools.append(agg)
+            if agg.name == (
+                    cfg.CONF['blazar:physical:host'].aggregate_freepool_name):
+                pools.append(agg)
+
+        return pools
+
+    def host_reservation_request(self, host_state, spec_obj, requested_pools):
+
+        pools = self.fetch_blazar_pools(host_state)
+
+        for pool in [p for p in pools if p.name in requested_pools]:
+            # Check tenant is allowed to use this Pool
+
+            # NOTE(sbauza): Currently, the key is only the project_id,
+            #  but later will possibly be blazar:tenant:{project_id}
+            key = spec_obj.project_id
+            access = pool.metadata.get(key)
+            if access:
+                return True
+            # NOTE(sbauza): We also need to check the blazar:owner key
+            #  until we modify the reservation pool for including the
+            #  project_id key as for any other extra project
+            owner = cfg.CONF['blazar:physical:host'].blazar_owner
+            owner_project_id = pool.metadata.get(owner)
+            if owner_project_id == spec_obj.project_id:
+                return True
+            LOG.info(_("Unauthorized request to use Pool "
+                       "%(pool_id)s by tenant %(tenant_id)s"),
+                     {'pool_id': pool.name,
+                      'tenant_id': spec_obj.project_id})
+            return False
+        return False
+
     def host_passes(self, host_state, spec_obj):
         """Check if a host in a pool can be used for a request
 
@@ -71,58 +116,14 @@ class BlazarFilter(filters.BaseHostFilter):
         if isinstance(requested_pools, six.text_type):
             requested_pools = [requested_pools]
 
-        # Get any reservation pools this host is part of
-        # Note this include possibly the freepool
-        aggregates = host_state.aggregates
-        pools = []
-        for agg in aggregates:
-            if (str(agg.availability_zone).startswith(
-                    cfg.CONF['blazar:physical:host'].blazar_az_prefix)
-                    # NOTE(hiro-kobayashi): following 2 lines are for keeping
-                    # backward compatibility
-                    or str(agg.availability_zone).startswith('blazar:')):
-                pools.append(agg)
-            if agg.name == (
-                    cfg.CONF['blazar:physical:host'].aggregate_freepool_name):
-                pools.append(agg)
+        # the request is host reservation
+        if requested_pools:
+            return self.host_reservation_request(host_state, spec_obj,
+                                                 requested_pools)
 
-        if pools:
-            if not requested_pools:
-                # Host is in a Pool and none requested
-                LOG.info(_("In a user pool or in the freepool"))
-                return False
-
-            # Find aggregate which matches Pool
-            for pool in pools:
-                if pool.name in requested_pools:
-
-                    # Check tenant is allowed to use this Pool
-
-                    # NOTE(sbauza): Currently, the key is only the project_id,
-                    #  but later will possibly be blazar:tenant:{project_id}
-                    key = spec_obj.project_id
-                    access = pool.metadata.get(key)
-                    if access:
-                        return True
-                    # NOTE(sbauza): We also need to check the blazar:owner key
-                    #  until we modify the reservation pool for including the
-                    #  project_id key as for any other extra project
-                    owner = cfg.CONF['blazar:physical:host'].blazar_owner
-                    owner_project_id = pool.metadata.get(owner)
-                    if owner_project_id == spec_obj.project_id:
-                        return True
-                    LOG.info(_("Unauthorized request to use Pool "
-                               "%(pool_id)s by tenant %(tenant_id)s"),
-                             {'pool_id': pool.name,
-                              'tenant_id': spec_obj.project_id})
-                    return False
-
-            # Host not in requested Pools
+        if self.fetch_blazar_pools(host_state):
+            # Host is in a blazar pool and non reservation request
+            LOG.info(_("In a user pool or in the freepool"))
             return False
 
-        else:
-
-            if requested_pools:
-                # Host is not in a Pool and Pool requested
-                return False
-            return True
+        return True

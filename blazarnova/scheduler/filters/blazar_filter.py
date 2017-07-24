@@ -24,6 +24,8 @@ from oslo_log import log as logging
 
 LOG = logging.getLogger(__name__)
 
+FLAVOR_EXTRA_SPEC = "aggregate_instance_extra_specs:reservation"
+
 opts = [
     cfg.StrOpt('aggregate_freepool_name',
                default='freepool',
@@ -120,6 +122,16 @@ class BlazarFilter(filters.BaseHostFilter):
         if requested_pools:
             return self.host_reservation_request(host_state, spec_obj,
                                                  requested_pools)
+
+        # the request is instance reservation
+        if FLAVOR_EXTRA_SPEC in spec_obj.flavor.extra_specs.keys():
+            # Scheduling requests for instance reservation are processed by
+            # other Nova filters: AggregateInstanceExtraSpecsFilter,
+            # AggregateMultiTenancyIsolation, and
+            # ServerGroupAntiAffinityFilter. What BlazarFilter needs to
+            # do is just pass the host if the request has an instance
+            # reservation key.
+            return True
 
         if self.fetch_blazar_pools(host_state):
             # Host is in a blazar pool and non reservation request

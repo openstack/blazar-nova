@@ -19,6 +19,8 @@ from nova.tests.unit.scheduler import fakes
 from nova.virt import fake
 from oslo_config import cfg
 
+FLAVOR_EXTRA_SPEC = "aggregate_instance_extra_specs:reservation"
+
 
 class BlazarFilterTestCase(test.TestCase):
     """Filter test case.
@@ -41,7 +43,8 @@ class BlazarFilterTestCase(test.TestCase):
         # And a base spec_obj
         self.spec_obj = objects.RequestSpec(
             project_id='fakepj',
-            scheduler_hints={}
+            scheduler_hints={},
+            flavor=objects.Flavor(flavorid='flavor-id1', extra_specs={})
         )
 
     def test_blazar_filter_no_pool_available_requested(self):
@@ -266,4 +269,18 @@ class BlazarFilterTestCase(test.TestCase):
             self.spec_obj)
 
         # Then the host shall pass
+        self.assertTrue(self.host.passes)
+
+    def test_instance_reservation_requested(self):
+
+        # A host is not in any aggregate
+        self.host.aggregates = []
+
+        # And instance-reservation-id1 is requested by an instance
+        self.spec_obj.flavor.extra_specs = {
+            FLAVOR_EXTRA_SPEC: 'instance-reservation-id1'}
+        self.spec_obj.flavor.flavorid = 'instance-reservation-id1'
+
+        self.host.passes = self.f.host_passes(self.host, self.spec_obj)
+
         self.assertTrue(self.host.passes)

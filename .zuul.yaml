@@ -3,6 +3,7 @@
       - check-requirements
       - openstack-python-jobs
       - openstack-python35-jobs
+      - openstack-python36-jobs
     check:
       jobs:
         - openstack-tox-lower-constraints:
@@ -17,6 +18,9 @@
         - openstack-tox-py35:
             required-projects:
               - openstack/nova
+        - openstack-tox-py36:
+            required-projects:
+              - openstack/nova
     gate:
       jobs:
         - openstack-tox-lower-constraints:
@@ -29,5 +33,8 @@
             required-projects:
               - openstack/nova
         - openstack-tox-py35:
+            required-projects:
+              - openstack/nova
+        - openstack-tox-py36:
             required-projects:
               - openstack/nova

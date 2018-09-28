@@ -118,7 +118,7 @@ class BlazarFilterTestCase(test.TestCase):
         # Then the host shall NOT pass
         self.assertFalse(self.host.passes)
 
-    def test_blazar_filter_host_not_in_ant_pool(self):
+    def test_blazar_filter_host_in_another_pool(self):
 
         # Given the host belongs to a pool different to 'r-fakeres'
         self.host.aggregates = [

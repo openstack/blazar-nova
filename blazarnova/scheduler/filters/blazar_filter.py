@@ -16,7 +16,7 @@
 
 import six
 
-from blazarnova.i18n import _  # noqa
+from blazarnova.i18n import _
 
 from nova.scheduler import filters
 from oslo_config import cfg

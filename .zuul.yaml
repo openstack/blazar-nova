@@ -2,7 +2,6 @@
     templates:
       - check-requirements
       - openstack-python-jobs
-      - openstack-python35-jobs
       - openstack-python36-jobs
       - openstack-python37-jobs
     check:
@@ -14,9 +13,6 @@
             required-projects:
               - openstack/nova
         - openstack-tox-py27:
-            required-projects:
-              - openstack/nova
-        - openstack-tox-py35:
             required-projects:
               - openstack/nova
         - openstack-tox-py36:
@@ -34,9 +30,6 @@
             required-projects:
               - openstack/nova
         - openstack-tox-py27:
-            required-projects:
-              - openstack/nova
-        - openstack-tox-py35:
             required-projects:
               - openstack/nova
         - openstack-tox-py36:

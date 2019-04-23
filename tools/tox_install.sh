@@ -51,7 +51,7 @@ elif [ -x "$ZUUL_CLONER" ]; then
     $ZUUL_CLONER --cache-dir \
         /opt/git \
         --branch $BRANCH_NAME \
-        https://git.openstack.org \
+        https://opendev.org \
         openstack/nova
     cd openstack/nova
     $install_cmd -e .
@@ -59,7 +59,7 @@ elif [ -x "$ZUUL_CLONER" ]; then
 else
     echo "PIP HARDCODE" > /tmp/tox_install.txt
     if [ -z "$NOVA_PIP_LOCATION" ]; then
-        NOVA_PIP_LOCATION="git+https://git.openstack.org/openstack/nova@$BRANCH_NAME#egg=nova"
+        NOVA_PIP_LOCATION="git+https://opendev.org/openstack/nova@$BRANCH_NAME#egg=nova"
     fi
     $install_cmd -U -e ${NOVA_PIP_LOCATION}
 fi

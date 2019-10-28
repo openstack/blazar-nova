@@ -1,7 +1,6 @@
 - project:
     templates:
       - check-requirements
-      - openstack-python-jobs
       - openstack-python3-ussuri-jobs
     check:
       jobs:
@@ -9,9 +8,6 @@
             required-projects:
               - openstack/nova
         - openstack-tox-pep8:
-            required-projects:
-              - openstack/nova
-        - openstack-tox-py27:
             required-projects:
               - openstack/nova
         - openstack-tox-py36:
@@ -26,9 +22,6 @@
             required-projects:
               - openstack/nova
         - openstack-tox-pep8:
-            required-projects:
-              - openstack/nova
-        - openstack-tox-py27:
             required-projects:
               - openstack/nova
         - openstack-tox-py36:

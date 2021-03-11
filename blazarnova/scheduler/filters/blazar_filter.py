@@ -14,8 +14,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import six
-
 from blazarnova.i18n import _
 
 from nova.scheduler import filters
@@ -115,7 +113,7 @@ class BlazarFilter(filters.BaseHostFilter):
 
         # Find which Pools the user wants to use (if any)
         requested_pools = spec_obj.get_scheduler_hint('reservation')
-        if isinstance(requested_pools, six.text_type):
+        if isinstance(requested_pools, str):
             requested_pools = [requested_pools]
 
         # the request is host reservation

@@ -284,3 +284,81 @@ class BlazarFilterTestCase(test.TestCase):
         self.host.passes = self.f.host_passes(self.host, self.spec_obj)
 
         self.assertTrue(self.host.passes)
+
+    def test_blazar_filter_host_in_freepool_for_preemptibles(self):
+
+        # Given preemptibles are allowed
+        cfg.CONF.set_override('allow_preemptibles', True,
+                              group='blazar:physical:host')
+        self.addCleanup(cfg.CONF.clear_override, 'allow_preemptibles',
+                        group='blazar:physical:host')
+
+        # Given the host is in the free pool
+        self.host.aggregates = [
+            objects.Aggregate(
+                name='freepool',
+                metadata={'availability_zone': ''})]
+
+        # And the instance is launched with a flavor marked as preemptible
+        self.spec_obj.flavor.extra_specs = {'blazar:preemptible': 'true'}
+
+        # When the host goes through the filter
+        self.host.passes = self.f.host_passes(self.host, self.spec_obj)
+
+        # Then the host shall pass
+        self.assertTrue(self.host.passes)
+
+    def test_blazar_filter_host_in_preemptibles(self):
+
+        # Given preemptibles are allowed and dedicated aggregate is used
+        cfg.CONF.set_override('allow_preemptibles', True,
+                              group='blazar:physical:host')
+        self.addCleanup(cfg.CONF.clear_override, 'allow_preemptibles',
+                        group='blazar:physical:host')
+        cfg.CONF.set_override('preemptible_aggregate', 'preemptibles',
+                              group='blazar:physical:host')
+        self.addCleanup(cfg.CONF.clear_override, 'preemptible_aggregate',
+                        group='blazar:physical:host')
+
+        # Given the host is in the preemptibles aggregate
+        self.host.aggregates = [
+            objects.Aggregate(
+                name='preemptibles',
+                metadata={'availability_zone': ''})]
+
+        # And the instance is launched with a flavor marked as preemptible
+        self.spec_obj.flavor.extra_specs = {'blazar:preemptible': 'true'}
+
+        # When the host goes through the filter
+        self.host.passes = self.f.host_passes(self.host, self.spec_obj)
+
+        # Then the host shall pass
+        self.assertTrue(self.host.passes)
+
+    def test_blazar_filter_host_not_in_preemptibles(self):
+
+        # Given preemptibles are allowed and dedicated aggregate is used
+        cfg.CONF.set_override('allow_preemptibles', True,
+                              group='blazar:physical:host')
+        self.addCleanup(cfg.CONF.clear_override, 'allow_preemptibles',
+                        group='blazar:physical:host')
+        cfg.CONF.set_override('preemptible_aggregate', 'preemptibles',
+                              group='blazar:physical:host')
+        self.addCleanup(cfg.CONF.clear_override, 'preemptible_aggregate',
+                        group='blazar:physical:host')
+
+        # Given the host is in the free pool
+        self.host.aggregates = [
+            objects.Aggregate(
+                name=cfg.CONF['blazar:physical:host'].aggregate_freepool_name,
+                metadata={'availability_zone': 'unknown',
+                          self.spec_obj.project_id: True})]
+
+        # And the instance is launched with a flavor marked as preemptible
+        self.spec_obj.flavor.extra_specs = {'blazar:preemptible': 'true'}
+
+        # When the host goes through the filter
+        self.host.passes = self.f.host_passes(self.host, self.spec_obj)
+
+        # Then the host shall NOT pass
+        self.assertFalse(self.host.passes)

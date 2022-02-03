@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    Adds support for running preemptible instances on unreserved Blazar hosts.
+    This functionality is disabled by default and can be enabled using
+    ``[blazar:physical:host]/allow_preemptibles``. It also needs to be enabled
+    in the Blazar service.

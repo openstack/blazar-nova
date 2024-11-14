@@ -14,12 +14,21 @@
 # pip install {opts} {packages}
 
 ZUUL_CLONER=/usr/zuul-env/bin/zuul-cloner
-BRANCH_NAME=${NOVA_BRANCH:-master}
 nova_installed=$(echo "import nova" | python 2>/dev/null ; echo $?)
 NOVA_DIR=$HOME/nova
 
 set -e
 set -x
+
+# Use .gitreview as the key to determine the appropriate branch to clone for
+# tests. Inspired by OSA code.
+PARENT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -f "${PARENT}/../.gitreview" ]; then
+  BRANCH_NAME=$(awk -F'=' '/defaultbranch/ {print $2}' "${PARENT}/../.gitreview")
+  if [[ "${BRANCH_NAME}" == "" ]]; then
+    BRANCH_NAME="master"
+  fi
+fi
 
 install_cmd="pip install -c$1"
 shift

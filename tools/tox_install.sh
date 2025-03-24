@@ -52,7 +52,7 @@ elif [ $nova_installed -eq 0 ]; then
 elif [ -d "/opt/git/opendev.org/openstack/nova" ]; then
     echo "PIP LOCAL" > /tmp/tox_install.txt
     if [ -z "$NOVA_PIP_LOCATION" ]; then
-        NOVA_PIP_LOCATION="git+file:///opt/git/opendev.org/openstack/nova@$BRANCH_NAME#egg=nova"
+        NOVA_PIP_LOCATION="git+file:///home/zuul/src/opendev.org/openstack/nova@$BRANCH_NAME#egg=nova"
     fi
     $install_cmd -U -e ${NOVA_PIP_LOCATION}
 else

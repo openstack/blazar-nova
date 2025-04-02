@@ -26,10 +26,21 @@
         - openstack-tox-py312:
             required-projects:
               - openstack/nova
+    periodic:
+      jobs:
+        - openstack-tox-py310:
+            branches:
+              - master
+            required-projects:
+              - openstack/nova
+        - openstack-tox-py311:
+            branches:
+              - master
+            required-projects:
+              - openstack/nova
 
 - project:
     templates:
       - check-requirements
-      - openstack-python3-jobs
       - openstack-python3-jobs-blazar-nova
       - release-notes-jobs-python3

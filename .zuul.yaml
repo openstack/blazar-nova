@@ -9,18 +9,22 @@
         - openstack-tox-pep8:
             required-projects:
               - openstack/nova
-        - openstack-tox-py39:
+        - openstack-tox-py310:
             required-projects:
               - openstack/nova
         - openstack-tox-py312:
             required-projects:
               - openstack/nova
+        - openstack-tox-py313:
+            required-projects:
+              - openstack/nova
+            voting: false
     gate:
       jobs:
         - openstack-tox-pep8:
             required-projects:
               - openstack/nova
-        - openstack-tox-py39:
+        - openstack-tox-py310:
             required-projects:
               - openstack/nova
         - openstack-tox-py312:

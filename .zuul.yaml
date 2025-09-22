@@ -26,6 +26,9 @@
         - openstack-tox-py312:
             required-projects:
               - openstack/nova
+    post:
+      jobs:
+        - publish-openstack-python-branch-tarball
 
 - project:
     templates:

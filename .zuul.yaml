@@ -42,6 +42,9 @@
               - master
             required-projects:
               - openstack/nova
+    post:
+      jobs:
+        - publish-openstack-python-branch-tarball
 
 - project:
     templates:

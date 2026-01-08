@@ -1,15 +1,10 @@
-========================
-Team and repository tags
-========================
+===========
+blazar-nova
+===========
 
 .. image:: https://governance.openstack.org/tc/badges/blazar-nova.svg
-    :target: https://governance.openstack.org/tc/reference/tags/index.html
 
 .. Change things from this point on
-
-============
-blazar-nova
-============
 
 This package contains the Blazar filter - a Nova scheduler filter used for the
 host reservation feature.

@@ -1,5 +1,7 @@
+# TODO(mattcrees): Remove once this merges:
+# https://review.opendev.org/c/openstack/openstack-zuul-jobs/+/973217
 - project-template:
-    name: openstack-python3-jobs-blazar-nova
+    name: openstack-python3-jobs-blazar-nova-old
     description: |
       The standard :zuul:project_template:`openstack-python-jobs` but with nova
       added as a required-projects. This checks out the project code and allows
@@ -49,5 +51,7 @@
 - project:
     templates:
       - check-requirements
-      - openstack-python3-jobs-blazar-nova
+      # TODO(mattcrees): Rename once this merges:
+      # https://review.opendev.org/c/openstack/openstack-zuul-jobs/+/973217
+      - openstack-python3-jobs-blazar-nova-old
       - release-notes-jobs-python3

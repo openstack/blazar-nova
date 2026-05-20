@@ -28,4 +28,4 @@ classifiers = [
 Repository = "https://opendev.org/openstack/blazar-nova"
 
 [tool.setuptools.packages.find]
-include = ["blazarnova"]
+include = ["blazarnova*"]

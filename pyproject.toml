@@ -30,3 +30,7 @@ Repository = "https://opendev.org/openstack/blazar-nova"
 
 [tool.setuptools.packages.find]
 include = ["blazarnova*"]
+
+[project.entry-points."oslo.config.opts"]
+"blazarnova" = "blazarnova._opts:list_opts"
+

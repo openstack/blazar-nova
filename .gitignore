@@ -33,3 +33,5 @@ pip-log.txt
 
 AUTHORS
 ChangeLog
+
+etc/blazar-nova.conf.sample
